@@ -105,11 +105,7 @@ public class CourseService {
             Course course = courseRepository.findByName(name)
                     .orElseThrow(() -> new RuntimeException("Course with name *"+ name +"* not found"));
 
-            try {
-                List<Student> students = studentRepository.findByCourse(course.getName());
-                return students;
-            }catch(Exception e){
-                throw  new RuntimeException("Kursi nuk ka studente!");
-            }
+            List<Student> students = studentRepository.findByCourse(course.getName());
+            return students;
     }
 }
