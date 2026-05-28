@@ -37,7 +37,11 @@ public class UserService {
         this.refreshTokenService = refreshTokenService;
     }
 
-
+//  Thirret authentication manager qe therret authenticationProvider dhe kontrollon
+//  nese gjendet apo jo useri qe
+//    eshte futur ne dto, ekziston apo jo ne db
+//    Deri pa u krijuar jwt tokeni puna mbaron deri te autentikimi
+//    Me tej nese eshte kaluar autentikimi krijojme nje access token
     public AuthResponseDTO login(LoginRequestDTO dto){
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
@@ -74,6 +78,7 @@ public class UserService {
     public String registerStudent(RegisterUserDTO dto){
         User user = new User();
         user.setUsername(dto.getUsername());
+//        kemi passwordEncoder.encode per ta vendosur te hashuar kodin ne db
         user.setPassword(passwordEncoder.encode(dto.getPassword()));
         user.setEmail(dto.getEmail());
 

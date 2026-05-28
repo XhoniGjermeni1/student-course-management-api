@@ -21,6 +21,13 @@ public class RefreshTokenService {
         this.refreshTokenRepository = refreshTokenRepository;
     }
 
+    private String generateSecureToken(){
+        byte[] randomBytes = new byte[64];
+        secureRandom.nextBytes((randomBytes));
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes);
+    }
+
+
     @Transactional
     public RefreshToken createRefreshToken(User user){
         RefreshToken refreshToken = new RefreshToken();
@@ -41,13 +48,6 @@ public class RefreshTokenService {
         }
         return refreshToken;
     }
-
-    private String generateSecureToken(){
-        byte[] randomBytes = new byte[64];
-        secureRandom.nextBytes((randomBytes));
-        return Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes);
-    }
-
 
     @Transactional
     public void revokeRefreshToken(String token){

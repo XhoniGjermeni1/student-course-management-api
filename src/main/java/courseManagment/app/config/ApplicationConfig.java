@@ -41,7 +41,14 @@ private final UserRepository userRepository;
                     .build();
         };
     }
+//    therret authenticationProvider psh ne rastin authenticationManager.authenticate(...)
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception{
+        return config.getAuthenticationManager();
+    }
 
+
+    //Kryen verifikimin e log in-it
     @Bean
     public AuthenticationProvider authenticationProvider(
             UserDetailsService userDetailsService,
@@ -52,10 +59,4 @@ private final UserRepository userRepository;
         authProvider.setPasswordEncoder(passwordEncoder);
         return authProvider;
     }
-
-    @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception{
-        return config.getAuthenticationManager();
-    }
-
 }

@@ -21,10 +21,19 @@ public class JwtService {
     @Value("${application.security.jwt.access-token-expiration}")
     private long accessTokenExpiration;
 
+//  JJWT nuk firmos dot me tekst por firmos me byte.
+    private SecretKey getSigningKey(){
+        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
+        return Keys.hmacShaKeyFor(keyBytes);
+    }
+
     public String generateAccessToken(User user){
         Date now = new Date();
         Date expiration = new Date(now.getTime() + accessTokenExpiration);
-
+//  Jwt tokeni qe te krijohet ka nevoje per disa claims te userit
+//        por vetem disa kryesore psh subject; role; issuedAt;
+//        expiration; Nuk duhen futur te dhena personale se tokeni nuk eshte i
+//        enkriptuar. Me compact() behet ndertimi final
         return Jwts.builder()
                 .subject(user.getUsername())
                 .claim("role", user.getRole().name())
@@ -51,7 +60,8 @@ public class JwtService {
     private Date extractExpiration(String token){
         return extractAllClaims(token).getExpiration();
     }
-
+//Krijohet parser qe di te lexoje JWT dhe verifikon secret key.
+//    Me tej kthen pjesen e brendshme te tokenit : claims/payload.
     private Claims extractAllClaims(String token){
         return Jwts.parser()
                 .verifyWith(getSigningKey())
@@ -61,9 +71,5 @@ public class JwtService {
     }
 
 
-    private SecretKey getSigningKey(){
-        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
-        return Keys.hmacShaKeyFor(keyBytes);
-    }
 
 }

@@ -15,6 +15,9 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+//  Kjo klase ekzekutohet per cdo request qe vjen ne backend. Merr requestin ; Shikon nese ka header;
+// Nese nuk ka token e le requestin te vazhdoje dhe e menaxhojme me security config;
+// Nese ka token
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
@@ -33,6 +36,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull HttpServletResponse response,
             @NonNull FilterChain filterchain
             )throws ServletException , IOException {
+//        Marrim JWT tokenin me kete getHeader
         final String authHeader = request.getHeader("Authorization");
         if (authHeader == null || !authHeader.startsWith("Bearer ")){
             filterchain.doFilter(request, response);
@@ -48,6 +52,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 UsernamePasswordAuthenticationToken authToken=
                         new UsernamePasswordAuthenticationToken(
                                 userDetails,
+//               Kjo credentials poshte eshte per passwordin por e vendosim null se e kemi bere
+//               autentikimin ne login
                                 null,
                                 userDetails.getAuthorities()
                         );

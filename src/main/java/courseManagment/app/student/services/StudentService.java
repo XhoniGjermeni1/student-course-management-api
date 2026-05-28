@@ -85,7 +85,7 @@ public class StudentService {
         try {
         validGrade = Grade.valueOf(inputGrade);
         } catch (IllegalArgumentException e) {
-            throw new RuntimeException("Nota '" + inputGrade + "' nuk është e vlefshme! Lejohen vetëm: A, B, C, D, E, F.");
+            throw new RuntimeException("Nota '" + inputGrade + "' nuk është e vlefshme! Lejohen vetëm: A, B, C, D, F.");
         }
         Enrollment enrollment = enrollmentRepository.findByStudentAndCourse(tempStudent, tempCourse)
                 .orElseThrow(()-> new RuntimeException("Enrollment not found"));
@@ -105,31 +105,45 @@ public class StudentService {
 
     public double getStudentGpa(String student) {
         Student tempStudent = studentRepository.findByFirstNameIgnoreCaseAndIsActive(student, true)
-                .orElseThrow(()-> new RuntimeException("Student not found"));
+                .orElseThrow(() -> new RuntimeException("Student not found"));
 
         List<Enrollment> enrollments = enrollmentRepository.findByStudent(tempStudent);
         if (enrollments.isEmpty()) {
             throw new RuntimeException("No enrollment for student " + student);
         }
-        double piket= 0.0;
-        int nrKurseve = 0;
-        for (Enrollment e : enrollments) {
-            if(e.getGrade() != null){
-                String Grade = e.getGrade().toUpperCase().trim();
 
-                switch (Grade) {
-                    case "A": piket +=4; break;
-                    case "B": piket +=3; break;
-                    case "C": piket +=2; break;
-                    case "D": piket +=1; break;
-                    default: continue;
-                }
-                nrKurseve++;
+        double piket = 0.0;
+        int totalKredite = 0;
+
+        for (Enrollment e : enrollments) {
+            if (e.getGrade() == null || e.getGrade().trim().isEmpty()) {
+                continue;
             }
+
+            String Grade = e.getGrade().toUpperCase().trim();
+
+            int kreditet = e.getCourse().getCredits();
+            if (kreditet <= 0) {
+                continue;
+            }
+
+            double piketKurse = switch (Grade) {
+                case "A" -> 4.0;
+                case "B" -> 3.0;
+                case "C" -> 2.0;
+                case "D" -> 1.0;
+                case "F" -> 0.0;
+                default -> throw new RuntimeException("Invalid grade found: " + e.getGrade());
+            };
+
+            piket += piketKurse * kreditet;
+            totalKredite += kreditet;
         }
-        if (nrKurseve == 0) {
+
+        if (totalKredite == 0) {
             return 0.0;
         }
-        return piket/nrKurseve;
+
+        return piket / totalKredite;
     }
 }
