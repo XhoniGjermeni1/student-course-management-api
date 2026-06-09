@@ -1,7 +1,13 @@
 package courseManagment.app.student.dto;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+
 public class AssignGradeDTO {
-private String grade;
+
+    @NotBlank(message = "Grade is required")
+    @Pattern(regexp = "(?i)^(A|B|C|D|F)$", message = "Grade must be one of: A, B, C, D, F")
+    private String grade;
 
     public AssignGradeDTO() {
     }

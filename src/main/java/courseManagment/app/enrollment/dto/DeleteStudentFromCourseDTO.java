@@ -1,7 +1,11 @@
 package courseManagment.app.enrollment.dto;
 
+import jakarta.validation.constraints.NotBlank;
+
 public class DeleteStudentFromCourseDTO {
+    @NotBlank(message = "Course is required")
     private String course;
+    @NotBlank(message = "Student is required")
     private String student;
 
     public DeleteStudentFromCourseDTO() {

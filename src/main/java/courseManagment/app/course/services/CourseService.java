@@ -7,6 +7,8 @@ import courseManagment.app.course.entity.Course;
 import courseManagment.app.course.repository.CourseRepository;
 import courseManagment.app.enrollment.entity.Enrollment;
 import courseManagment.app.enrollment.repository.EnrollmentRepository;
+import courseManagment.app.exception.BusinessRuleException;
+import courseManagment.app.exception.NotFoundException;
 import courseManagment.app.student.entity.Student;
 import courseManagment.app.student.repository.StudentRepository;
 import courseManagment.app.user.entity.Role;
@@ -14,24 +16,20 @@ import courseManagment.app.user.entity.User;
 import courseManagment.app.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.servlet.View;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 @Service
 public class CourseService {
 
-    private final View error;
+    private final CourseRepository courseRepository;
     private final UserRepository userRepository;
     private final EnrollmentRepository enrollmentRepository;
     private final StudentRepository studentRepository;
-    private CourseRepository courseRepository;
 
-    public CourseService(CourseRepository courseRepository, View error, UserRepository userRepository, EnrollmentRepository enrollmentRepository, StudentRepository studentRepository) {
+    public CourseService(CourseRepository courseRepository, UserRepository userRepository, EnrollmentRepository enrollmentRepository, StudentRepository studentRepository) {
         this.courseRepository = courseRepository;
-        this.error = error;
         this.userRepository = userRepository;
         this.enrollmentRepository = enrollmentRepository;
         this.studentRepository = studentRepository;
@@ -40,7 +38,7 @@ public class CourseService {
     @Transactional
     public String createCourse(CreateCourseDTO dto) {
         if (courseRepository.existsByName(dto.getName().trim())) {
-            return "Course already exists: " + dto.getName();
+            throw new BusinessRuleException("Course already exists: " + dto.getName());
         }
 
         Course course = new Course();
@@ -54,58 +52,59 @@ public class CourseService {
     }
 
     public Optional<Course> findCourseByName(String name) {
-       Optional<Course> course = courseRepository.findByName(name);
-       return course;
+        return courseRepository.findByName(name);
     }
 
     @Transactional
-    public String updateCourse(UpdateCourseDTO dto, String name) {
-        Course course = courseRepository.findByName(name)
-                .orElseThrow(()-> new RuntimeException ("Course with name *"+ name +"* not found"));
-//           Course updatedCourse = course.get(); //zberthen optional dhe nxjerr prej aty objektin Course
-//  Nuk i bejme merge sepse kur i bejme set hibernate i ben update
-//  vete ne databaze pa u dashur ne ti japim komanden merge per update
-            course.setName(dto.getName());
-            course.setCapacity(dto.getCapacity());
-            course.setCredits(dto.getCredits());
-            courseRepository.save(course);
-            return "Course updated: " + course;
+    public String updateCourse(UpdateCourseDTO dto) {
+        Course course = courseRepository.findByName(dto.getOldName())
+                .orElseThrow(() -> new NotFoundException("Course with name *" + dto.getOldName() + "* not found"));
 
-        }
-        @Transactional
-        public Course assignTeacher(AssignTeacherDTO dto) {
-            Course course = courseRepository.findByName(dto.getCourse())
-                    .orElseThrow(() -> new RuntimeException("Kursi '" + dto.getCourse() + "' nuk u gjet!"));
-            User teacher = userRepository.findByUsernameIgnoreCase(dto.getTeacher())
-                    .orElseThrow(() -> new RuntimeException("Mësuesi '" + dto.getTeacher() + "' nuk u gjet!"));
-            if (teacher.getRole() != Role.TEACHER) {
-                throw new RuntimeException("Përdoruesi " + dto.getTeacher() + " nuk mund të caktohet si mësues sepse ka rolin: " + teacher.getRole());
-            }
-            course.setTeacher(teacher);
-            return course;
+        course.setName(dto.getName());
+        course.setCapacity(dto.getCapacity());
+        course.setCredits(dto.getCredits());
+        courseRepository.save(course);
+
+        return "Course updated: " + course;
+    }
+
+    @Transactional
+    public Course assignTeacher(AssignTeacherDTO dto) {
+        Course course = courseRepository.findByName(dto.getCourse())
+                .orElseThrow(() -> new NotFoundException("Kursi '" + dto.getCourse() + "' nuk u gjet!"));
+
+        User teacher = userRepository.findByUsernameIgnoreCase(dto.getTeacher())
+                .orElseThrow(() -> new NotFoundException("Mesuesi '" + dto.getTeacher() + "' nuk u gjet!"));
+
+        if (teacher.getRole() != Role.TEACHER) {
+            throw new BusinessRuleException("Perdoruesi " + dto.getTeacher() + " nuk mund te caktohet si mesues sepse ka rolin: " + teacher.getRole());
         }
 
-        public List<Course> findAllCourses() {
+        course.setTeacher(teacher);
+        return course;
+    }
+
+    public List<Course> findAllCourses() {
         return courseRepository.findAll();
-        }
+    }
 
-        @Transactional
-        public void deleteCourse(String name) {
+    @Transactional
+    public void deleteCourse(String name) {
         Course course = courseRepository.findByName(name)
-                .orElseThrow(() -> new RuntimeException("Course with name *"+ name +"* not found"));
+                .orElseThrow(() -> new NotFoundException("Course with name *" + name + "* not found"));
 
-            List<Enrollment> enrollment = enrollmentRepository.findByCourse(course);
-            if (!enrollment.isEmpty()) {
-                throw new RuntimeException("Kursi '" + name + "' nuk mund te fshihet!");
-            }else
-                courseRepository.delete(course);
+        List<Enrollment> enrollment = enrollmentRepository.findByCourse(course);
+        if (!enrollment.isEmpty()) {
+            throw new BusinessRuleException("Kursi '" + name + "' nuk mund te fshihet!");
         }
 
-        public List<Student> getCourseWithStudents(String name){
-            Course course = courseRepository.findByName(name)
-                    .orElseThrow(() -> new RuntimeException("Course with name *"+ name +"* not found"));
+        courseRepository.delete(course);
+    }
 
-            List<Student> students = studentRepository.findByCourse(course.getName());
-            return students;
+    public List<Student> getCourseWithStudents(String name) {
+        Course course = courseRepository.findByName(name)
+                .orElseThrow(() -> new NotFoundException("Course with name *" + name + "* not found"));
+
+        return studentRepository.findByCourse(course.getName());
     }
 }

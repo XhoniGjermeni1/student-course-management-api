@@ -1,10 +1,12 @@
 package courseManagment.app.course.dto;
 
-import courseManagment.app.user.entity.User;
+import jakarta.validation.constraints.NotBlank;
 
 public class AssignTeacherDTO {
-private String course;
-private String teacher;
+    @NotBlank(message = "Course is required")
+    private String course;
+    @NotBlank(message = "Teacher name is required")
+    private String teacher;
 
     public AssignTeacherDTO() {
     }

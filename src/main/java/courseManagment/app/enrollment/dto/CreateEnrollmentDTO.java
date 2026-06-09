@@ -1,10 +1,11 @@
 package courseManagment.app.enrollment.dto;
 
-import courseManagment.app.course.entity.Course;
-import courseManagment.app.student.entity.Student;
+import jakarta.validation.constraints.NotBlank;
 
 public class CreateEnrollmentDTO {
+    @NotBlank(message = "Course is required")
     private String course;
+    @NotBlank(message = "Student is required")
     private String student;
 
     public CreateEnrollmentDTO() {

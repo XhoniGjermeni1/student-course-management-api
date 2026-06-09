@@ -7,6 +7,7 @@ import courseManagment.app.enrollment.dto.DeleteStudentFromCourseDTO;
 import courseManagment.app.enrollment.services.EnrollmentService;
 import courseManagment.app.student.entity.Student;
 import courseManagment.app.student.repository.StudentRepository;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -30,14 +31,14 @@ public class EnrollmentController {
 
     @PostMapping("/create/enrollment")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER') or @authorizationService.isCurrentStudent(#dto.student)")
-    public ResponseEntity<?> addStudentToCourse(@RequestBody CreateEnrollmentDTO dto) {
+    public ResponseEntity<?> addStudentToCourse(@Valid @RequestBody CreateEnrollmentDTO dto) {
         String message = enrollmentService.addEnrollment(dto);
         return new ResponseEntity<>(message, HttpStatus.CREATED);
     }
 
     @DeleteMapping("/delete/enrollment")
     @PreAuthorize("hasAnyRole('ADMIN') or @authorizationService.isCurrentStudent(#dto.student)")
-    public ResponseEntity<?> deleteStudentFromCourse(@RequestBody DeleteStudentFromCourseDTO dto) {
+    public ResponseEntity<?> deleteStudentFromCourse(@Valid @RequestBody DeleteStudentFromCourseDTO dto) {
         Optional<Course> tempCourse = courseRepository.findByName(dto.getCourse());
         Optional <Student> tempStudent = studentRepository.findByFirstNameIgnoreCaseAndIsActive(dto.getStudent(), true);
 

@@ -1,5 +1,6 @@
 package courseManagment.app.token;
 
+import courseManagment.app.exception.InvalidTokenException;
 import courseManagment.app.user.entity.User;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Value;
@@ -41,10 +42,10 @@ public class RefreshTokenService {
 
     public RefreshToken validateRefreshToken(String token){
         RefreshToken refreshToken = refreshTokenRepository.findByToken(token)
-                .orElseThrow(()-> new RuntimeException("Refresh token found"));
+                .orElseThrow(()-> new InvalidTokenException("Refresh token not found"));
 
         if(!refreshToken.isActive()){
-            throw new RuntimeException("Runtime token is expired or revoked");
+            throw new InvalidTokenException("Refresh token is expired or revoked");
         }
         return refreshToken;
     }
@@ -52,7 +53,7 @@ public class RefreshTokenService {
     @Transactional
     public void revokeRefreshToken(String token){
         RefreshToken refreshToken = refreshTokenRepository.findByToken(token)
-                .orElseThrow(()-> new RuntimeException("Refresh token not found"));
+                .orElseThrow(()-> new InvalidTokenException("Refresh token not found"));
         refreshToken.setRevoked(true);
         refreshTokenRepository.save(refreshToken);
     }

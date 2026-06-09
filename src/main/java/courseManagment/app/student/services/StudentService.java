@@ -5,18 +5,17 @@ import courseManagment.app.course.repository.CourseRepository;
 import courseManagment.app.enrollment.entity.Enrollment;
 import courseManagment.app.enrollment.entity.Grade;
 import courseManagment.app.enrollment.repository.EnrollmentRepository;
+import courseManagment.app.exception.BusinessRuleException;
+import courseManagment.app.exception.NotFoundException;
 import courseManagment.app.student.dto.AssignGradeDTO;
 import courseManagment.app.student.entity.Student;
 import courseManagment.app.student.repository.StudentRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class StudentService {
@@ -32,13 +31,12 @@ public class StudentService {
     }
 
     public String getStudentWithEnrolledCourses(Student student) {
-
-        Optional<Student> student1 = studentRepository.findByFirstNameIgnoreCaseAndIsActive(student.getFirstName(), true);
-        Student tempStudent = student1.get();
+        Student tempStudent = studentRepository.findByFirstNameIgnoreCaseAndIsActive(student.getFirstName(), true)
+                .orElseThrow(() -> new NotFoundException("Student not found"));
 
         List<Enrollment> enrollments = enrollmentRepository.findByStudent(tempStudent);
         if (enrollments.isEmpty()) {
-            return "Studenti " + tempStudent.getFirstName() + " nuk është i regjistruar në asnjë kurs.";
+            return "Studenti " + tempStudent.getFirstName() + " nuk eshte i regjistruar ne asnje kurs.";
         }
 
         StringBuilder sb = new StringBuilder();
@@ -46,7 +44,7 @@ public class StudentService {
             sb.append("[").append(e.getCourse().getName()).append("] ");
         }
 
-        return "Kurset e studentit " + tempStudent.getFirstName() + " jane: " + sb.toString();
+        return "Kurset e studentit " + tempStudent.getFirstName() + " jane: " + sb;
     }
 
     public Page<Student> getFilteredStudents(String name, Pageable pageable) {
@@ -60,56 +58,59 @@ public class StudentService {
     @Transactional
     public void deleteStudentIfNoEnrolled(String name) {
         Student student1 = studentRepository.findByFirstNameIgnoreCaseAndIsActive(name, true)
-                .orElseThrow(() -> new RuntimeException("Student not found"));
+                .orElseThrow(() -> new NotFoundException("Student not found"));
+
         List<Enrollment> enrollments = enrollmentRepository.findByStudent(student1);
         if (!enrollments.isEmpty()) {
             StringBuilder sb = new StringBuilder();
             for (Enrollment e : enrollments) {
                 sb.append("[").append(e.getCourse().getName()).append("] ");
+            }
+            throw new BusinessRuleException("Nuk mund ta fshish studentin " + name + " sepse eshte regjistruar ne kurset: " + sb);
+        }
 
-                throw new RuntimeException("Nuk mund ta fshish studentin " + name + " sepse eshte regjistruar ne kurset: "
-                    + sb.toString());
-        }
         studentRepository.delete(student1);
-        }
     }
 
     @Transactional
-    public void assignGradeToStudent (AssignGradeDTO dto, String student, String course) {
+    public void assignGradeToStudent(AssignGradeDTO dto, String student, String course) {
         Student tempStudent = studentRepository.findByFirstNameIgnoreCaseAndIsActive(student, true)
-                .orElseThrow(()-> new RuntimeException("Student not found"));
+                .orElseThrow(() -> new NotFoundException("Student not found"));
         Course tempCourse = courseRepository.findByName(course)
-                .orElseThrow(()-> new RuntimeException("Course not found"));
-        String inputGrade = dto.getGrade().toUpperCase().trim();
-        Grade validGrade;
-        try {
-        validGrade = Grade.valueOf(inputGrade);
-        } catch (IllegalArgumentException e) {
-            throw new RuntimeException("Nota '" + inputGrade + "' nuk është e vlefshme! Lejohen vetëm: A, B, C, D, F.");
-        }
-        Enrollment enrollment = enrollmentRepository.findByStudentAndCourse(tempStudent, tempCourse)
-                .orElseThrow(()-> new RuntimeException("Enrollment not found"));
+                .orElseThrow(() -> new NotFoundException("Course not found"));
 
-        enrollment.setGrade(dto.getGrade().toUpperCase());
+        String inputGrade = dto.getGrade().toUpperCase().trim();
+        try {
+            Grade.valueOf(inputGrade);
+        } catch (IllegalArgumentException e) {
+            throw new BusinessRuleException("Nota '" + inputGrade + "' nuk eshte e vlefshme! Lejohen vetem: A, B, C, D, F.");
+        }
+
+        Enrollment enrollment = enrollmentRepository.findByStudentAndCourse(tempStudent, tempCourse)
+                .orElseThrow(() -> new NotFoundException("Enrollment not found"));
+
+        enrollment.setGrade(inputGrade);
     }
 
-    public List<Enrollment> listEnrollmentsForStudent(String student){
+    public List<Enrollment> listEnrollmentsForStudent(String student) {
         Student tempStudent = studentRepository.findByFirstNameIgnoreCaseAndIsActive(student, true)
-                .orElseThrow(()-> new RuntimeException("Student not found"));
+                .orElseThrow(() -> new NotFoundException("Student not found"));
+
         List<Enrollment> enrollment = enrollmentRepository.findByStudent(tempStudent);
-               if (enrollment.isEmpty()) {
-                   throw new RuntimeException("No enrollment for student " + student);
-               }
-               return enrollment;
+        if (enrollment.isEmpty()) {
+            throw new NotFoundException("No enrollment for student " + student);
+        }
+
+        return enrollment;
     }
 
     public double getStudentGpa(String student) {
         Student tempStudent = studentRepository.findByFirstNameIgnoreCaseAndIsActive(student, true)
-                .orElseThrow(() -> new RuntimeException("Student not found"));
+                .orElseThrow(() -> new NotFoundException("Student not found"));
 
         List<Enrollment> enrollments = enrollmentRepository.findByStudent(tempStudent);
         if (enrollments.isEmpty()) {
-            throw new RuntimeException("No enrollment for student " + student);
+            throw new NotFoundException("No enrollment for student " + student);
         }
 
         double piket = 0.0;
@@ -133,7 +134,7 @@ public class StudentService {
                 case "C" -> 2.0;
                 case "D" -> 1.0;
                 case "F" -> 0.0;
-                default -> throw new RuntimeException("Invalid grade found: " + e.getGrade());
+                default -> throw new BusinessRuleException("Invalid grade found: " + e.getGrade());
             };
 
             piket += piketKurse * kreditet;

@@ -6,6 +6,7 @@ import courseManagment.app.student.dto.AssignGradeDTO;
 import courseManagment.app.student.entity.Student;
 import courseManagment.app.student.repository.StudentRepository;
 import courseManagment.app.student.services.StudentService;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -57,7 +58,7 @@ public class StudentController {
 
     @PostMapping("grade/{student}/{course}")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
-    public ResponseEntity<?> updateStudentGrade(@PathVariable String student, @PathVariable String course, @RequestBody AssignGradeDTO dto) {
+    public ResponseEntity<?> updateStudentGrade(@PathVariable String student, @PathVariable String course, @Valid @RequestBody AssignGradeDTO dto) {
         studentService.assignGradeToStudent(dto, student, course);
         return ResponseEntity.ok("U vendos me sukses");
     }

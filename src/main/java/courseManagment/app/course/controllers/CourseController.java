@@ -6,6 +6,7 @@ import courseManagment.app.course.dto.UpdateCourseDTO;
 import courseManagment.app.course.entity.Course;
 import courseManagment.app.course.services.CourseService;
 import courseManagment.app.student.entity.Student;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,19 +23,19 @@ public class CourseController {
     }
 
     @PostMapping("/create/course")
-    public ResponseEntity<String> createCourse(@RequestBody CreateCourseDTO dto) {
+    public ResponseEntity<String> createCourse(@Valid @RequestBody CreateCourseDTO dto) {
         String message = courseService.createCourse(dto);
         return new ResponseEntity<>(message, HttpStatus.CREATED);
     }
 
     @PutMapping("/update/course")
-    public ResponseEntity<String> updateCourse(@RequestBody UpdateCourseDTO dto, @RequestBody String oldName) {
-        String message = courseService.updateCourse(dto, oldName);
+    public ResponseEntity<String> updateCourse(@Valid @RequestBody UpdateCourseDTO dto) {
+        String message = courseService.updateCourse(dto);
         return new ResponseEntity<>(message, HttpStatus.OK);
     }
 
     @PutMapping("/assign")
-    public ResponseEntity<?> assignCourse(@RequestBody AssignTeacherDTO dto ) {
+    public ResponseEntity<?> assignCourse(@Valid @RequestBody AssignTeacherDTO dto ) {
         Course updatedCourse = courseService.assignTeacher(dto);
         return ResponseEntity.ok(updatedCourse);
     }

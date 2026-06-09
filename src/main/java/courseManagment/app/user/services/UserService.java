@@ -1,5 +1,6 @@
 package courseManagment.app.user.services;
 
+import courseManagment.app.exception.NotFoundException;
 import courseManagment.app.security.JwtService;
 import courseManagment.app.student.entity.Student;
 import courseManagment.app.token.RefreshToken;
@@ -8,6 +9,7 @@ import courseManagment.app.token.RefreshTokenService;
 import courseManagment.app.user.dto.AuthResponseDTO;
 import courseManagment.app.user.dto.LoginRequestDTO;
 import courseManagment.app.user.dto.RegisterUserDTO;
+import courseManagment.app.user.dto.UserResponseDTO;
 import courseManagment.app.user.entity.Role;
 import courseManagment.app.user.entity.User;
 import courseManagment.app.user.repository.UserRepository;
@@ -50,7 +52,7 @@ public class UserService {
                 )
         );
         User user = userRepository.findByUsernameIgnoreCase(dto.getUsername())
-                .orElseThrow(()-> new RuntimeException("User not found!"));
+                .orElseThrow(()-> new NotFoundException("User not found!"));
 
         String accessToken = jwtService.generateAccessToken(user);
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
@@ -110,8 +112,14 @@ public class UserService {
 //        return "User registered successfully" + user.getRole();
 //    }
 
-    public User getUserByName(String username){
-       return userRepository.findByUsernameIgnoreCase(username)
-        .orElseThrow(() -> new RuntimeException("User nuk u gjet me emrin: " + username));
+    public UserResponseDTO getUserByName(String username){
+       User user = userRepository.findByUsernameIgnoreCase(username)
+        .orElseThrow(() -> new NotFoundException("User nuk u gjet me emrin: " + username));
+       return new UserResponseDTO(
+               user.getId(),
+               user.getUsername(),
+               user.getEmail(),
+               user.getRole()
+       );
     }
 }

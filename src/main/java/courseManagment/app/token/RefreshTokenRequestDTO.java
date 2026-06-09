@@ -1,7 +1,9 @@
 package courseManagment.app.token;
 
-public class RefreshTokenRequestDTO {
+import jakarta.validation.constraints.NotBlank;
 
+public class RefreshTokenRequestDTO {
+    @NotBlank(message = "Refresh token is required")
     private String refreshToken;
 
     public RefreshTokenRequestDTO(){}

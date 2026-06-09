@@ -1,8 +1,19 @@
 package courseManagment.app.course.dto;
 
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
 public class UpdateCourseDTO {
+    @NotBlank(message = "Course is required")
+    @Size(min = 2, max = 100, message = "Course name must be between 2 and 100 characters")
     private String name;
+    @NotBlank(message = "Course is required")
+    @Size(min = 2, max = 100, message = "Course name must be between 2 and 100 characters")
+    private String oldName;
+    @Min(value = 1, message = "Capacity must be at least 1")
     private int capacity;
+    @Min(value = 1, message = "Credits must be at least 1")
     private int credits;
     public UpdateCourseDTO() {}
 
@@ -24,6 +35,14 @@ public class UpdateCourseDTO {
 
     public int getCredits() {
         return credits;
+    }
+
+    public String getOldName() {
+        return oldName;
+    }
+
+    public void setOldName(String oldName) {
+        this.oldName = oldName;
     }
 
     public void setCredits(int credits) {
