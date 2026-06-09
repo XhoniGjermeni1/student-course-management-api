@@ -12,7 +12,13 @@ import java.util.List;
 import java.util.UUID;
 
 @Entity
-@Table(name ="users")
+@Table(
+        name = "users",
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uk_users_username", columnNames = "username"),
+                @UniqueConstraint(name = "uk_users_email", columnNames = "email")
+        }
+)
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -20,17 +26,17 @@ public class User {
     @Column(name = "id")
     private UUID id;
 
-    @Column(name = "username", unique = true, nullable = false)
+    @Column(name = "username", nullable = false, length = 100)
     private String username;
 
-    @Column(name = "password",nullable = false)
+    @Column(name = "password", nullable = false)
     private String password;
 
-    @Column(name = "email",unique = true, nullable = false)
+    @Column(name = "email", nullable = false, length = 150)
     private String email;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "role")
+    @Column(name = "role", nullable = false, length = 30)
     private Role role;
 
     @OneToOne(mappedBy = "user",cascade = CascadeType.ALL, fetch = FetchType.LAZY)

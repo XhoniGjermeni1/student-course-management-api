@@ -12,7 +12,12 @@ import java.util.List;
 import java.util.UUID;
 
 @Entity
-@Table(name = "courses")
+@Table(
+        name = "courses",
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uk_courses_name", columnNames = "name")
+        }
+)
 public class Course {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -20,13 +25,13 @@ public class Course {
     @Column(name = "id")
     private UUID id;
 
-    @Column(name = "name", nullable = false, unique = true)
+    @Column(name = "name", nullable = false, length = 150)
     private String name;
 
-    @Column(name = "capacity")
+    @Column(name = "capacity", nullable = false)
     private int capacity;
 
-    @Column(name = "credits")
+    @Column(name = "credits", nullable = false)
     private int credits;
 
     @ManyToOne(fetch = FetchType.LAZY)
