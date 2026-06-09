@@ -1,4 +1,4 @@
-# Student Course Management API
+# Student-Course-Management-API
 
 ## Run Project
 
